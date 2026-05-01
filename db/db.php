@@ -1,18 +1,24 @@
 <?php
-// db.php
+// db.php - Supabase PostgreSQL connection with environment variables
 class Database
 {
-    // 👇 PASTE THE SESSION POOLER VALUES HERE 👇
-    private $host = 'db.fddnruksiofxalrtypmk.supabase.co';  // From pooler string
-    private $port = '5432';
-    private $dbname = 'postgres';
-    private $username = 'postgres';  // Notice: postgres.YOUR_PROJECT_ID
-    private $password = '@#Ellyred@#12345';  // Your real password
+    private $host;
+    private $port;
+    private $dbname;
+    private $username;
+    private $password;
     private $sql;
 
     public function getConnection()
     {
         $this->sql = null;
+
+        // Read from environment variables, fall back to defaults for local dev
+        $this->host = $_ENV['DB_HOST'] ?? 'db.fddnruksiofxalrtypmk.supabase.co';
+        $this->port = $_ENV['DB_PORT'] ?? '5432';
+        $this->dbname = $_ENV['DB_NAME'] ?? 'postgres';
+        $this->username = $_ENV['DB_USER'] ?? 'postgres';
+        $this->password = $_ENV['DB_PASS'] ?? '@#Ellyred@#12345';
 
         try {
             $dsn = "pgsql:host=" . $this->host .
