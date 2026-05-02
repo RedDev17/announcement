@@ -110,7 +110,7 @@ function deleteModule($id)
 function getToDoList()
 {
     $pdo = getPDO();
-    $query = $pdo->query("SELECT * FROM todo_list WHERE deadline || ' ' || deadline_time >= NOW() ORDER BY deadline ASC, deadline_time ASC");
+    $query = $pdo->query("SELECT * FROM todo_list WHERE (deadline + deadline_time) >= NOW() ORDER BY deadline ASC, deadline_time ASC");
     if (!$query) return [];
     return $query->fetchAll();
 }
@@ -151,8 +151,9 @@ function getCalendarEvents($month, $year)
 function getUpcomingEvents($limit = 5)
 {
     $pdo = getPDO();
-    $stmt = $pdo->prepare("SELECT * FROM calendar_events WHERE event_date >= CURRENT_DATE ORDER BY event_date ASC, event_time ASC LIMIT ?");
-    $stmt->execute([$limit]);
+    $stmt = $pdo->prepare("SELECT * FROM calendar_events WHERE event_date >= CURRENT_DATE ORDER BY event_date ASC, event_time ASC LIMIT :lim");
+    $stmt->bindValue(':lim', (int)$limit, PDO::PARAM_INT);
+    $stmt->execute();
     return $stmt->fetchAll();
 }
 

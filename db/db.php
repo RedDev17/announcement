@@ -40,7 +40,11 @@ class Database
 
 function getDB()
 {
-    $database = new Database();
-    return $database->getConnection();
+    static $connection = null;
+    if ($connection === null) {
+        $database = new Database();
+        $connection = $database->getConnection();
+    }
+    return $connection;
 }
 ?>
