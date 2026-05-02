@@ -8,8 +8,6 @@
                 'manage_modules.php' => 'Module Management',
                 'manage_todo.php' => 'Todo List Management',
                 'manage_calendar.php' => 'Calendar Management',
-                'manage.php' => 'Management',
-                'analytics.php' => 'Analytics',
             ];
             echo isset($pageTitles[$current_page]) ? $pageTitles[$current_page] : 'Dashboard';
             ?>

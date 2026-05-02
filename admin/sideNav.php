@@ -30,7 +30,7 @@
                 </a>
             </li>
             <li>
-                <a href="../../index.php">
+                <a href="../index.php">
                     <i class="fas fa-home"></i> View Site
                 </a>
             </li>

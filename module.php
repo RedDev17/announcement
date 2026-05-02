@@ -1,7 +1,7 @@
 <?php
 require_once './db/db.php';
 require_once './db/storage.php';
-require_once './fuction.php';
+require_once './functions.php';
 
 $storage = supabaseStorage();
 

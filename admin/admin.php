@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../../db/db.php';
+require_once '../db/db.php';
 
 if (isset($_POST['login'])) {
     $username = $_POST['username'];
@@ -17,10 +17,10 @@ if (isset($_POST['login'])) {
 
         if ($user['access_level'] === 'admin') {
             header("Location: dashboard.php");
-        } else {
-            header("Location: admin.php");
+            exit();
         }
-        exit();
+        $message = "Access denied: admin only";
+        echo "<script type='text/javascript'>alert('$message');</script>";
     }
     $message = "Incorrect username or password";
     echo "<script type='text/javascript'>alert('$message');</script>";
@@ -33,7 +33,7 @@ if (isset($_POST['login'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../../css/admin.css">
+    <link rel="stylesheet" href="../css/admin.css">
     <title>Admin</title>
 </head>
 

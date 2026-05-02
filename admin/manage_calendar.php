@@ -1,5 +1,5 @@
 <?php
-include '../../db/db.php';
+include '../db/db.php';
 session_start();
 
 if (!isset($_SESSION['username'])) {
@@ -7,7 +7,7 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
-require_once '../../fuction.php';
+require_once '../functions.php';
 $username = $_SESSION['username'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -41,7 +41,7 @@ $events = getAllCalendarEvents();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Calendar</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../../css/dashboard.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
 </head>
 <body>
     <div class="dashboard-container">

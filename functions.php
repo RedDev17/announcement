@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/db/db.php';
+require_once __DIR__ . '/db/storage.php';
 
 function getPDO() {
     return getDB();
@@ -40,10 +41,10 @@ function renameFolder($id, $name)
 function deleteFolder($id)
 {
     $files = getModulesByFolder($id);
+    $storage = supabaseStorage();
     foreach ($files as $file) {
-        $filePath = __DIR__ . '/componets/src/uploads/modules/' . $file['file_name'];
-        if (file_exists($filePath)) {
-            unlink($filePath);
+        if (!empty($file['file_name'])) {
+            $storage->delete('modules', $file['file_name']);
         }
     }
     $pdo = getPDO();

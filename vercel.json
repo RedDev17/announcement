@@ -2,12 +2,12 @@
   "version": 2,
   "builds": [
     { "src": "*.php", "use": "vercel-php@0.7.3" },
-    { "src": "componets/src/*.php", "use": "vercel-php@0.7.3" },
+    { "src": "admin/*.php", "use": "vercel-php@0.7.3" },
     { "src": "css/**", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/css/(.*)", "dest": "/css/$1" },
-    { "src": "/componets/src/(.+\\.php)", "dest": "/componets/src/$1" },
+    { "src": "/admin/(.+\\.php)", "dest": "/admin/$1" },
     { "src": "/(.+\\.php)", "dest": "/$1" },
     { "src": "/", "dest": "/index.php" }
   ]

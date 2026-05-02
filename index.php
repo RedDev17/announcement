@@ -1,7 +1,7 @@
 <?php
 require_once './db/db.php';
 require_once './db/storage.php';
-require_once './fuction.php';
+require_once './functions.php';
 
 $folders = getFolders();
 $toDoList = getToDoList();
@@ -55,9 +55,9 @@ if ($imgRes && $imgRes->rowCount() > 0) {
                         <i class="fas fa-image"></i>
                         <h3>Schedule</h3>
                     </div>
-                    <div class="card-bstorge->publicUrl('images', $a)
+                    <div class="card-body image-display">
                         <?php if ($announcementImage): ?>
-                            <img src="./componets/src/uploads/<?php echo htmlspecialchars($announcementImage['file']); ?>"
+                            <img src="<?php echo htmlspecialchars($storage->publicUrl('images', $announcementImage['file'])); ?>"
                                 alt="Schedule">
                         <?php else: ?>
                             <div class="empty-state">
