@@ -24,7 +24,8 @@ class Database
             $dsn = "pgsql:host=" . $this->host .
                 ";port=" . $this->port .
                 ";dbname=" . $this->dbname .
-                ";sslmode=require";
+                ";sslmode=require" .
+                ";options='--family=ipv4'";
 
             $this->sql = new PDO($dsn, $this->username, $this->password);
             $this->sql->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
