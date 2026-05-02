@@ -22,9 +22,23 @@ class Database
         $this->password = $_ENV['DB_PASS'] ?? '@#Ellyred@#12345';
 
         try {
-            // Try to resolve IPv4 address, fallback to hostname
-            $ipv4 = gethostbyname($this->host);
-            $hostToUse = ($ipv4 && $ipv4 !== $this->host) ? $ipv4 : $this->host;
+            // Try to resolve IPv4 via Google DNS-over-HTTPS
+            $dnsUrl = "https://dns.google/resolve?name=" . $this->host . "&type=A";
+            $dnsResponse = @file_get_contents($dnsUrl);
+            $ipv4 = null;
+            if ($dnsResponse) {
+                $dnsData = json_decode($dnsResponse, true);
+                if (isset($dnsData['Answer'])) {
+                    foreach ($dnsData['Answer'] as $answer) {
+                        if ($answer['type'] == 1) { // A record (IPv4)
+                            $ipv4 = $answer['data'];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            $hostToUse = $ipv4 ?: $this->host;
 
             $dsn = "pgsql:host=" . $hostToUse .
                 ";port=" . $this->port .
