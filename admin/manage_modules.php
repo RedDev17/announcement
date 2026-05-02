@@ -1,6 +1,6 @@
 <?php
-include '../db/db.php';
-include '../db/storage.php';
+include __DIR__ . '/../db/db.php';
+include __DIR__ . '/../db/storage.php';
 session_start();
 
 if (!isset($_SESSION['username'])) {
@@ -8,7 +8,7 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
-require_once '../functions.php';
+require_once __DIR__ . '/../functions.php';
 $username = $_SESSION['username'];
 $msg = '';
 

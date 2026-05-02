@@ -1,7 +1,7 @@
 <?php
-require_once './db/db.php';
-require_once './db/storage.php';
-require_once './functions.php';
+require_once __DIR__ . '/db/db.php';
+require_once __DIR__ . '/db/storage.php';
+require_once __DIR__ . '/functions.php';
 
 $folders = getFolders();
 $toDoList = getToDoList();

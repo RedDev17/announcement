@@ -1,7 +1,7 @@
 <?php
 session_start();
-include '../db/db.php';
-include '../db/storage.php';
+include __DIR__ . '/../db/db.php';
+include __DIR__ . '/../db/storage.php';
 
 if (!isset($_SESSION['username'])) {
     header("Location: admin.php");
