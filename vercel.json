@@ -7,7 +7,6 @@
   },
   "routes": [
     { "src": "/css/(.*)", "dest": "/css/$1" },
-    { "src": "/componets/src/uploads/(.*)", "dest": "/componets/src/uploads/$1" },
     { "src": "/(.+\\.php)", "dest": "/$1" },
     { "src": "/", "dest": "/index.php" }
   ]

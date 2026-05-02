@@ -1,5 +1,6 @@
 <?php
 include '../../db/db.php';
+include '../../db/storage.php';
 session_start();
 
 if (!isset($_SESSION['username'])) {
@@ -47,16 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $folderId = intval($_POST['folder_id']);
 
         if (!empty($title) && $folderId > 0 && isset($_FILES['module_file']) && $_FILES['module_file']['error'] === UPLOAD_ERR_OK) {
-            $fileName = basename($_FILES['module_file']['name']);
+            $originalName = basename($_FILES['module_file']['name']);
             $tempName = $_FILES['module_file']['tmp_name'];
-            $uploadDir = 'uploads/modules/';
-
-            if (!file_exists($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
-
-            $uniqueName = time() . '_' . $fileName;
-            $targetPath = $uploadDir . $uniqueName;
 
             $allowedTypes = ['application/pdf'];
             $fileType = mime_content_type($tempName);
@@ -66,12 +59,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit();
             }
 
-            if (move_uploaded_file($tempName, $targetPath)) {
+            // Generate unique safe filename
+            $safeName = preg_replace('/[^A-Za-z0-9_-]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
+            $uniqueName = time() . '_' . $safeName . '.pdf';
+
+            $storage = supabaseStorage();
+            if ($storage->upload('modules', $uniqueName, $tempName, 'application/pdf')) {
                 addModule($title, $uniqueName, $description, $folderId);
                 header("Location: manage_modules.php");
                 exit();
             } else {
-                echo "<script>alert('Failed to upload file'); window.location.href='manage_modules.php';</script>";
+                echo "<script>alert('Failed to upload PDF to Supabase Storage. Check your env config.'); window.location.href='manage_modules.php';</script>";
                 exit();
             }
         }

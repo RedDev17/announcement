@@ -1,9 +1,10 @@
 <?php
 session_start();
 include '../../db/db.php';
+include '../../db/storage.php';
 
 if (!isset($_SESSION['username'])) {
-    header("Location: login.php");
+    header("Location: admin.php");
     exit();
 }
 
@@ -13,9 +14,8 @@ if (isset($_POST['submit'])) {
         exit();
     }
 
-    $file_name = basename($_FILES['image']['name']);
+    $original_name = basename($_FILES['image']['name']);
     $tempname = $_FILES['image']['tmp_name'];
-    $folder = 'uploads/' . $file_name;
 
     $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     $file_type = mime_content_type($tempname);
@@ -25,19 +25,23 @@ if (isset($_POST['submit'])) {
         exit();
     }
 
-    if (!file_exists('uploads')) {
-        mkdir('uploads', 0777, true);
-    }
+    // Generate unique filename to avoid collisions
+    $ext = pathinfo($original_name, PATHINFO_EXTENSION);
+    $safeName = preg_replace('/[^A-Za-z0-9_-]/', '_', pathinfo($original_name, PATHINFO_FILENAME));
+    $file_name = time() . '_' . $safeName . '.' . $ext;
 
-    if (move_uploaded_file($tempname, $folder)) {
+    $storage = supabaseStorage();
+
+    // Upload to Supabase Storage 'images' bucket
+    if ($storage->upload('images', $file_name, $tempname, $file_type)) {
         $pdo = getDB();
 
+        // Delete the old image from Supabase
         $old = $pdo->query("SELECT file FROM image LIMIT 1");
         if ($old && $old->rowCount() > 0) {
             $old_row = $old->fetch();
-            $old_file = 'uploads/' . $old_row['file'];
-            if (file_exists($old_file) && $old_file !== $folder) {
-                unlink($old_file);
+            if (!empty($old_row['file']) && $old_row['file'] !== $file_name) {
+                $storage->delete('images', $old_row['file']);
             }
         }
 
@@ -48,7 +52,7 @@ if (isset($_POST['submit'])) {
 
         echo "<script>alert('Image uploaded successfully'); window.location.href='dashboard.php';</script>";
     } else {
-        echo "<script>alert('Failed to upload file'); window.location.href='dashboard.php';</script>";
+        echo "<script>alert('Failed to upload file to Supabase Storage. Check your SUPABASE_URL and SUPABASE_SERVICE_KEY.'); window.location.href='dashboard.php';</script>";
     }
 }
 ?>

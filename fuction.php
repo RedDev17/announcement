@@ -95,10 +95,7 @@ function deleteModule($id)
 {
     $module = getModuleById($id);
     if ($module && !empty($module['file_name'])) {
-        $filePath = __DIR__ . '/componets/src/uploads/modules/' . $module['file_name'];
-        if (file_exists($filePath)) {
-            unlink($filePath);
-        }
+        supabaseStorage()->delete('modules', $module['file_name']);
     }
     $pdo = getPDO();
     $stmt = $pdo->prepare("DELETE FROM files WHERE id = ?");
@@ -251,4 +248,5 @@ function renderCalendar($month, $year, $events)
     $html .= '</div></div>';
     return $html;
 }
+?>
 ?>

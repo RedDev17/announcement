@@ -1,6 +1,9 @@
 <?php
 require_once './db/db.php';
+require_once './db/storage.php';
 require_once './fuction.php';
+
+$storage = supabaseStorage();
 
 $view = 'not_found';
 $folder = null;
@@ -152,9 +155,9 @@ if (isset($_GET['id'])) {
             <?php endif; ?>
 
         <?php elseif ($view === 'pdf'): ?>
-            <!-- ===== PDF VIEW: Google Docs viewer + download ===== -->
+            <!-- ===== PDF VIEW: native browser viewer + download ===== -->
             <?php
-                $pdfLocalPath = './componets/src/uploads/modules/' . $module['file_name'];
+                $pdfLocalPath = $storage->publicUrl('modules', $module['file_name']);
             ?>
             <div class="nav-bar">
                 <a href="index.php" class="nav-link"><i class="fas fa-home"></i> Board</a>

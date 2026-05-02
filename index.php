@@ -1,9 +1,11 @@
 <?php
 require_once './db/db.php';
+require_once './db/storage.php';
 require_once './fuction.php';
 
 $folders = getFolders();
 $toDoList = getToDoList();
+$storage = supabaseStorage();
 
 $calMonth = isset($_GET['month']) ? intval($_GET['month']) : (int) date('m');
 $calYear = isset($_GET['year']) ? intval($_GET['year']) : (int) date('Y');
@@ -53,7 +55,7 @@ if ($imgRes && $imgRes->rowCount() > 0) {
                         <i class="fas fa-image"></i>
                         <h3>Schedule</h3>
                     </div>
-                    <div class="card-body image-display">
+                    <div class="card-bstorge->publicUrl('images', $a)
                         <?php if ($announcementImage): ?>
                             <img src="./componets/src/uploads/<?php echo htmlspecialchars($announcementImage['file']); ?>"
                                 alt="Schedule">
