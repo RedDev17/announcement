@@ -13,10 +13,10 @@ class Database
     {
         $this->sql = null;
 
-        // Read from environment variables, fall back to defaults for local dev
-        // Use Supabase connection pooler for better IPv4 support
-        $this->host = $_ENV['DB_HOST'] ?? 'aws-0-ap-southeast-1.pooler.supabase.com';
-        $this->port = $_ENV['DB_PORT'] ?? '6543';
+        // Use Supabase connection pooler for IPv4 support (Vercel doesn't support IPv6)
+        // Environment variables are ignored to ensure pooler is used
+        $this->host = 'aws-0-ap-southeast-1.pooler.supabase.com';
+        $this->port = '6543';
         $this->dbname = $_ENV['DB_NAME'] ?? 'postgres';
         $this->username = $_ENV['DB_USER'] ?? 'postgres';
         $this->password = $_ENV['DB_PASS'] ?? '@#Ellyred@#12345';
