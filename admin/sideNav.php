@@ -34,6 +34,11 @@
                     <i class="fas fa-home"></i> View Site
                 </a>
             </li>
+            <li>
+                <a href="logout.php" style="color:#ef4444;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </li>
         </ul>
     </div>
 </div>

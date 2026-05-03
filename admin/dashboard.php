@@ -62,8 +62,9 @@ $username = $authUser['username'];
                 </form>
             </div>
         </div>
+    </div>
 
-        <script>
+    <script>
             // Minimal script for visual feedback only
             document.addEventListener('DOMContentLoaded', function () {
                 const fileInput = document.getElementById('fileInput');

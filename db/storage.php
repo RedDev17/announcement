@@ -8,8 +8,8 @@ class SupabaseStorage
 
     public function __construct()
     {
-        $this->url = rtrim($_ENV['SUPABASE_URL'] ?? getenv('SUPABASE_URL') ?? '', '/');
-        $this->key = $_ENV['SUPABASE_SERVICE_KEY'] ?? getenv('SUPABASE_SERVICE_KEY') ?? '';
+        $this->url = rtrim(getenv('SUPABASE_URL') ?: '', '/');
+        $this->key = getenv('SUPABASE_SERVICE_KEY') ?: '';
     }
 
     /**
