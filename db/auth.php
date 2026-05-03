@@ -2,7 +2,8 @@
 // auth.php - Cookie-based authentication for serverless (Vercel)
 // Uses HMAC-signed tokens instead of PHP sessions
 
-define('AUTH_SECRET', getenv('AUTH_SECRET') ?: 'annoucement-board-secret-key-change-me');
+$_auth_secret = getenv('AUTH_SECRET') ?: ($_ENV['AUTH_SECRET'] ?? ($_SERVER['AUTH_SECRET'] ?? 'annoucement-board-secret-key-change-me'));
+define('AUTH_SECRET', $_auth_secret);
 define('AUTH_COOKIE', 'admin_token');
 define('AUTH_EXPIRY', 86400); // 24 hours
 

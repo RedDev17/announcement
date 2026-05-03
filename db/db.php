@@ -9,16 +9,21 @@ class Database
     private $password;
     private $sql;
 
+    private function env($name, $default = '')
+    {
+        return getenv($name) ?: ($_ENV[$name] ?? ($_SERVER[$name] ?? $default));
+    }
+
     public function getConnection()
     {
         $this->sql = null;
 
         // Use Supabase connection pooler (IPv4-compatible for Vercel)
-        $this->host = getenv('DB_HOST') ?: 'aws-1-ap-southeast-2.pooler.supabase.com';
-        $this->port = getenv('DB_PORT') ?: '6543';
-        $this->dbname = getenv('DB_NAME') ?: 'postgres';
-        $this->username = getenv('DB_USER') ?: 'postgres.fddnruksiofxalrtypmk';
-        $this->password = getenv('DB_PASS') ?: '@#Ellyred@#12345';
+        $this->host = $this->env('DB_HOST', 'aws-1-ap-southeast-2.pooler.supabase.com');
+        $this->port = $this->env('DB_PORT', '6543');
+        $this->dbname = $this->env('DB_NAME', 'postgres');
+        $this->username = $this->env('DB_USER', 'postgres.fddnruksiofxalrtypmk');
+        $this->password = $this->env('DB_PASS', '@#Ellyred@#12345');
 
         try {
             $dsn = "pgsql:host=" . $this->host .
