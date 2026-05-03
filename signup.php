@@ -8,7 +8,7 @@ if (isset($_POST['signup'])) {
     $access_level = $_POST['access_level'];
 
     $pdo = getDB();
-    $stmt = $pdo->prepare("INSERT INTO user (username, email, password, access_level) VALUES (?, ?, ?, ?)");
+    $stmt = $pdo->prepare('INSERT INTO "user" (username, email, password, access_level) VALUES (?, ?, ?, ?)');
     $result = $stmt->execute([$username, $email, $password, $access_level]);
 
     if (!$result) {

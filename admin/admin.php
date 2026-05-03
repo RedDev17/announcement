@@ -7,7 +7,7 @@ if (isset($_POST['login'])) {
     $password = $_POST['password'];
 
     $pdo = getDB();
-    $stmt = $pdo->prepare("SELECT * FROM user WHERE username = ?");
+    $stmt = $pdo->prepare('SELECT * FROM "user" WHERE username = ?');
     $stmt->execute([$username]);
     $user = $stmt->fetch();
 
