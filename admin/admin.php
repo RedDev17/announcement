@@ -1,6 +1,12 @@
 <?php
-session_start();
 require_once __DIR__ . '/../db/db.php';
+require_once __DIR__ . '/../db/auth.php';
+
+// Already logged in as admin? Go to dashboard
+if (getLoggedInUser() && getLoggedInUser()['access_level'] === 'admin') {
+    header("Location: dashboard.php");
+    exit();
+}
 
 if (isset($_POST['login'])) {
     $username = $_POST['username'];
@@ -12,10 +18,8 @@ if (isset($_POST['login'])) {
     $user = $stmt->fetch();
 
     if ($user && password_verify($password, $user['password'])) {
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['email'] = $user['email'];
-
         if ($user['access_level'] === 'admin') {
+            loginUser($user['username'], $user['email'], $user['access_level']);
             header("Location: dashboard.php");
             exit();
         } else {

@@ -1,14 +1,10 @@
 <?php
 include __DIR__ . '/../db/db.php';
-session_start();
-
-if (!isset($_SESSION['username'])) {
-    header("Location: admin.php");
-    exit();
-}
-
+require_once __DIR__ . '/../db/auth.php';
 require_once __DIR__ . '/../functions.php';
-$username = $_SESSION['username'];
+
+$authUser = requireAdmin();
+$username = $authUser['username'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_event'])) {

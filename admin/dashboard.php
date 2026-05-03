@@ -1,13 +1,9 @@
 <?php
 include __DIR__ . '/../db/db.php';
-session_start();
+require_once __DIR__ . '/../db/auth.php';
 
-if (!isset($_SESSION['username'])) {
-    header("Location: admin.php");
-    exit();
-}
-
-$username = $_SESSION['username'];
+$authUser = requireAdmin();
+$username = $authUser['username'];
 ?>
 
 <!DOCTYPE html>

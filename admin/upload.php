@@ -1,12 +1,9 @@
 <?php
-session_start();
 include __DIR__ . '/../db/db.php';
 include __DIR__ . '/../db/storage.php';
+require_once __DIR__ . '/../db/auth.php';
 
-if (!isset($_SESSION['username'])) {
-    header("Location: admin.php");
-    exit();
-}
+$authUser = requireAdmin();
 
 if (isset($_POST['submit'])) {
     if (!isset($_FILES['image']) || $_FILES['image']['error'] == UPLOAD_ERR_NO_FILE) {
