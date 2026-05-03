@@ -4,6 +4,7 @@ include __DIR__ . '/../db/storage.php';
 require_once __DIR__ . '/../db/auth.php';
 
 $authUser = requireAdmin();
+$username = $authUser['username'];
 
 if (isset($_POST['submit'])) {
     if (!isset($_FILES['image']) || $_FILES['image']['error'] == UPLOAD_ERR_NO_FILE) {
@@ -13,11 +14,19 @@ if (isset($_POST['submit'])) {
 
     $original_name = basename($_FILES['image']['name']);
     $tempname = $_FILES['image']['tmp_name'];
+    $size = (int)($_FILES['image']['size'] ?? 0);
+
+    // Max 5MB
+    $maxBytes = 5 * 1024 * 1024;
+    if ($size <= 0 || $size > $maxBytes) {
+        echo "<script>alert('File size must be between 1 byte and 5MB.'); window.location.href='dashboard.php';</script>";
+        exit();
+    }
 
     $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     $file_type = mime_content_type($tempname);
 
-    if (!in_array($file_type, $allowed_types)) {
+    if (!in_array($file_type, $allowed_types, true)) {
         echo "<script>alert('Only JPG, PNG, GIF, WEBP files are allowed'); window.location.href='dashboard.php';</script>";
         exit();
     }

@@ -14,11 +14,12 @@
         </h1>
     </div>
     <div class="user-profile">
+        <?php $u = isset($username) && $username ? $username : 'Admin'; ?>
         <div class="avatar">
-            <?php echo strtoupper(substr($username, 0, 1)); ?>
+            <?php echo strtoupper(substr($u, 0, 1)); ?>
         </div>
         <div class="user-info">
-            <?php echo htmlspecialchars($username); ?>
+            <?php echo htmlspecialchars($u); ?>
         </div>
     </div>
 </div>

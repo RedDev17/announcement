@@ -3,32 +3,42 @@ require_once __DIR__ . '/../db/db.php';
 require_once __DIR__ . '/../db/auth.php';
 
 // Already logged in as admin? Go to dashboard
-if (getLoggedInUser() && getLoggedInUser()['access_level'] === 'admin') {
+$current = getLoggedInUser();
+if ($current && $current['access_level'] === 'admin') {
     header("Location: dashboard.php");
     exit();
 }
 
-if (isset($_POST['login'])) {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+$error = '';
 
-    $pdo = getDB();
-    $stmt = $pdo->prepare('SELECT * FROM "user" WHERE username = ?');
-    $stmt->execute([$username]);
-    $user = $stmt->fetch();
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
 
-    if ($user && password_verify($password, $user['password'])) {
-        if ($user['access_level'] === 'admin') {
-            loginUser($user['username'], $user['email'], $user['access_level']);
-            header("Location: dashboard.php");
-            exit();
-        } else {
-            $message = "Access denied: admin only";
-            echo "<script type='text/javascript'>alert('$message');</script>";
-        }
+    if ($username === '' || $password === '') {
+        $error = 'Please fill in both fields.';
     } else {
-        $message = "Incorrect username or password";
-        echo "<script type='text/javascript'>alert('$message');</script>";
+        try {
+            $pdo = getDB();
+            $stmt = $pdo->prepare('SELECT * FROM "user" WHERE username = ?');
+            $stmt->execute([$username]);
+            $user = $stmt->fetch();
+
+            if ($user && password_verify($password, $user['password'])) {
+                if ($user['access_level'] === 'admin') {
+                    loginUser($user['username'], $user['email'], $user['access_level']);
+                    header("Location: dashboard.php");
+                    exit();
+                } else {
+                    $error = 'Access denied: admin accounts only.';
+                }
+            } else {
+                $error = 'Incorrect username or password.';
+            }
+        } catch (PDOException $e) {
+            error_log('Admin login failed: ' . $e->getMessage());
+            $error = 'Login failed. Please try again later.';
+        }
     }
 }
 ?>
@@ -40,7 +50,7 @@ if (isset($_POST['login'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../css/admin.css">
-    <title>Admin</title>
+    <title>Admin Login</title>
 </head>
 
 <body>
@@ -48,9 +58,13 @@ if (isset($_POST['login'])) {
         <div class="login-header">
             <h3>Admin Login</h3>
         </div>
-        <form method="post" class="login-form">
+        <form method="post" class="login-form" autocomplete="off">
+            <?php if ($error): ?>
+                <div class="alert error"><?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
             <div class="form-group">
-                <input type="text" name="username" placeholder="Username" required>
+                <input type="text" name="username" placeholder="Username" required
+                    value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>">
             </div>
             <div class="form-group">
                 <input type="password" name="password" placeholder="Password" required>

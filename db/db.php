@@ -23,7 +23,13 @@ class Database
         $this->port = $this->env('DB_PORT', '6543');
         $this->dbname = $this->env('DB_NAME', 'postgres');
         $this->username = $this->env('DB_USER', 'postgres.fddnruksiofxalrtypmk');
-        $this->password = $this->env('DB_PASS', '@#Ellyred@#12345');
+        $this->password = $this->env('DB_PASS');
+
+        if (empty($this->password)) {
+            error_log('DB_PASS environment variable is not set');
+            http_response_code(500);
+            die('Server configuration error.');
+        }
 
         try {
             $dsn = "pgsql:host=" . $this->host .
@@ -36,7 +42,9 @@ class Database
             $this->sql->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
         } catch (PDOException $e) {
-            die("Connection failed: " . $e->getMessage());
+            error_log('DB connection failed: ' . $e->getMessage());
+            http_response_code(500);
+            die('Database connection error. Please try again later.');
         }
 
         return $this->sql;

@@ -2,10 +2,24 @@
 // auth.php - Cookie-based authentication for serverless (Vercel)
 // Uses HMAC-signed tokens instead of PHP sessions
 
-$_auth_secret = getenv('AUTH_SECRET') ?: ($_ENV['AUTH_SECRET'] ?? ($_SERVER['AUTH_SECRET'] ?? 'annoucement-board-secret-key-change-me'));
+$_auth_secret = getenv('AUTH_SECRET') ?: ($_ENV['AUTH_SECRET'] ?? ($_SERVER['AUTH_SECRET'] ?? ''));
+if (empty($_auth_secret)) {
+    error_log('AUTH_SECRET environment variable is not set');
+    http_response_code(500);
+    die('Server configuration error.');
+}
 define('AUTH_SECRET', $_auth_secret);
 define('AUTH_COOKIE', 'admin_token');
 define('AUTH_EXPIRY', 86400); // 24 hours
+
+// Detect HTTPS so the Secure cookie flag is set on production but not localhost
+function authIsHttps()
+{
+    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') return true;
+    if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') return true;
+    if (!empty($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443) return true;
+    return false;
+}
 
 /**
  * Create a signed auth token for a user.
@@ -51,6 +65,7 @@ function loginUser($username, $email, $accessLevel)
         'expires' => time() + AUTH_EXPIRY,
         'path' => '/',
         'httponly' => true,
+        'secure' => authIsHttps(),
         'samesite' => 'Lax',
     ]);
 }
@@ -86,6 +101,7 @@ function logoutUser()
         'expires' => time() - 3600,
         'path' => '/',
         'httponly' => true,
+        'secure' => authIsHttps(),
         'samesite' => 'Lax',
     ]);
 }

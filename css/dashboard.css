@@ -58,7 +58,7 @@ body {
 	padding: 20px 0;
 }
 
-a {
+.nav-menu a {
 	padding: 14px 24px;
 	display: flex;
 	align-items: center;
@@ -66,22 +66,20 @@ a {
 	cursor: pointer;
 	transition: all 0.2s;
 	border-left: 4px solid transparent;
+	text-decoration: none;
+	color: #cbd5e1;
 }
 
-a:hover {
+.nav-menu a:hover {
 	background-color: rgba(255, 255, 255, 0.05);
 	border-left-color: #3b82f6;
+	color: #ffffff;
 }
 
-a.active {
+.nav-menu a.active {
 	background-color: rgba(59, 130, 246, 0.1);
 	border-left-color: #3b82f6;
 	color: #60a5fa;
-}
-
-a{
-	text-decoration: none;
-	color: white;
 }
 
 .nav-icon {
@@ -281,7 +279,7 @@ a{
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
 	.dashboard-container {
 		flex-direction: column;
 	}
@@ -291,19 +289,32 @@ a{
 		height: auto;
 	}
 
-	.nav-menu {
-		display: flex;
-		overflow-x: auto;
-		padding: 0;
+	.logo-area {
+		padding: 16px 20px;
 	}
 
-	.nav-item {
+	.nav-menu {
+		padding: 8px 0;
+	}
+
+	.nav-menu ul {
+		display: flex;
+		overflow-x: auto;
+		gap: 4px;
+		padding: 0 12px;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	.nav-menu a {
+		padding: 10px 16px;
 		white-space: nowrap;
 		border-left: none;
 		border-bottom: 3px solid transparent;
+		font-size: 14px;
 	}
 
-	.nav-item.active {
+	.nav-menu a:hover,
+	.nav-menu a.active {
 		border-left: none;
 		border-bottom-color: #3b82f6;
 	}
@@ -318,16 +329,69 @@ a{
 		gap: 15px;
 	}
 
-	.user-profile {
-		align-self: flex-end;
+	.upload-card {
+		padding: 28px 20px;
 	}
 
+	.form-row {
+		flex-direction: column;
+		gap: 0;
+	}
+
+	.data-table th,
+	.data-table td {
+		padding: 10px 12px;
+		font-size: 13px;
+	}
 }
 
 @media (max-width: 480px) {
-
 	.upload-card {
-		padding: 25px 20px;
+		padding: 20px 16px;
+		border-radius: 12px;
+	}
+
+	.card-icon {
+		width: 64px;
+		height: 64px;
+		font-size: 26px;
+	}
+
+	.card-title {
+		font-size: 20px;
+	}
+
+	.card-description {
+		font-size: 14px;
+	}
+
+	.submit-button {
+		width: 100%;
+		justify-content: center;
+		padding: 14px;
+	}
+
+	.file-input-container {
+		padding: 22px 14px;
+	}
+
+	.browse-button {
+		padding: 12px 22px;
+		font-size: 14px;
+	}
+
+	.page-title {
+		font-size: 22px;
+	}
+
+	.user-profile {
+		padding: 8px 12px;
+	}
+
+	.avatar {
+		width: 36px;
+		height: 36px;
+		font-size: 14px;
 	}
 }
 
