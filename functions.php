@@ -48,6 +48,8 @@ function deleteFolder($id)
         }
     }
     $pdo = getPDO();
+    $stmt = $pdo->prepare("DELETE FROM files WHERE folder_id = ?");
+    $stmt->execute([$id]);
     $stmt = $pdo->prepare("DELETE FROM module_folders WHERE id = ?");
     return $stmt->execute([$id]);
 }

@@ -49,7 +49,8 @@ if (isset($_POST['submit'])) {
 
         echo "<script>alert('Image uploaded successfully'); window.location.href='dashboard.php';</script>";
     } else {
-        echo "<script>alert('Failed to upload file to Supabase Storage. Check your SUPABASE_URL and SUPABASE_SERVICE_KEY.'); window.location.href='dashboard.php';</script>";
+        $err = htmlspecialchars($storage->getLastError());
+        echo "<script>alert('Upload failed: " . addslashes($err) . "'); window.location.href='dashboard.php';</script>";
     }
 }
 ?>

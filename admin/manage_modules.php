@@ -65,7 +65,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header("Location: manage_modules.php");
                 exit();
             } else {
-                echo "<script>alert('Failed to upload PDF to Supabase Storage. Check your env config.'); window.location.href='manage_modules.php';</script>";
+                $err = addslashes(htmlspecialchars($storage->getLastError()));
+                echo "<script>alert('Upload failed: " . $err . "'); window.location.href='manage_modules.php';</script>";
                 exit();
             }
         }
