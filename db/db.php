@@ -13,33 +13,15 @@ class Database
     {
         $this->sql = null;
 
-        // Use Supabase connection pooler for IPv4 support (Vercel doesn't support IPv6)
-        $this->host = 'aws-1-ap-southeast-2.pooler.supabase.com';
-        $this->port = '6543';
-        $this->dbname = 'postgres';
-        $this->username = 'postgres.fddnruksiofxalrtypmk';
-        $this->password = $_ENV['DB_PASS'] ?? '@#Ellyred@#12345';
+        // Use Supabase connection pooler (IPv4-compatible for Vercel)
+        $this->host = getenv('DB_HOST') ?: 'aws-1-ap-southeast-2.pooler.supabase.com';
+        $this->port = getenv('DB_PORT') ?: '6543';
+        $this->dbname = getenv('DB_NAME') ?: 'postgres';
+        $this->username = getenv('DB_USER') ?: 'postgres.fddnruksiofxalrtypmk';
+        $this->password = getenv('DB_PASS') ?: '@#Ellyred@#12345';
 
         try {
-            // Try to resolve IPv4 via Google DNS-over-HTTPS
-            $dnsUrl = "https://dns.google/resolve?name=" . $this->host . "&type=A";
-            $dnsResponse = @file_get_contents($dnsUrl);
-            $ipv4 = null;
-            if ($dnsResponse) {
-                $dnsData = json_decode($dnsResponse, true);
-                if (isset($dnsData['Answer'])) {
-                    foreach ($dnsData['Answer'] as $answer) {
-                        if ($answer['type'] == 1) { // A record (IPv4)
-                            $ipv4 = $answer['data'];
-                            break;
-                        }
-                    }
-                }
-            }
-
-            $hostToUse = $ipv4 ?: $this->host;
-
-            $dsn = "pgsql:host=" . $hostToUse .
+            $dsn = "pgsql:host=" . $this->host .
                 ";port=" . $this->port .
                 ";dbname=" . $this->dbname .
                 ";sslmode=require";

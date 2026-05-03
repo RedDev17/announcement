@@ -250,4 +250,3 @@ function renderCalendar($month, $year, $events)
     return $html;
 }
 ?>
-?>

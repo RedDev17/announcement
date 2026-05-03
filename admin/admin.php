@@ -18,12 +18,14 @@ if (isset($_POST['login'])) {
         if ($user['access_level'] === 'admin') {
             header("Location: dashboard.php");
             exit();
+        } else {
+            $message = "Access denied: admin only";
+            echo "<script type='text/javascript'>alert('$message');</script>";
         }
-        $message = "Access denied: admin only";
+    } else {
+        $message = "Incorrect username or password";
         echo "<script type='text/javascript'>alert('$message');</script>";
     }
-    $message = "Incorrect username or password";
-    echo "<script type='text/javascript'>alert('$message');</script>";
 }
 ?>
 
