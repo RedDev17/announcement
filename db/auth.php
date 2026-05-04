@@ -7,19 +7,11 @@ function _authEnv($name)
     return getenv($name) ?: ($_ENV[$name] ?? ($_SERVER[$name] ?? ''));
 }
 
+// Read secret from env; fall back to a static key so the app keeps working
+// even if AUTH_SECRET is not set. For best security, set AUTH_SECRET on Vercel.
 $_auth_secret = _authEnv('AUTH_SECRET');
-// Fallback: derive a stable secret from DB_PASS so users don't need a second env var.
-// Still secure because DB_PASS is not in source code.
 if (empty($_auth_secret)) {
-    $dbPass = _authEnv('DB_PASS');
-    if (!empty($dbPass)) {
-        $_auth_secret = hash('sha256', 'auth:' . $dbPass);
-    }
-}
-if (empty($_auth_secret)) {
-    error_log('No AUTH_SECRET or DB_PASS env var available to derive auth secret');
-    http_response_code(500);
-    die('Server configuration error.');
+    $_auth_secret = 'annoucement-board-default-auth-secret-v1';
 }
 define('AUTH_SECRET', $_auth_secret);
 define('AUTH_COOKIE', 'admin_token');

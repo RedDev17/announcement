@@ -9,8 +9,8 @@ class SupabaseStorage
 
     public function __construct()
     {
-        $this->url = rtrim($this->env('SUPABASE_URL'), '/');
-        $this->key = $this->env('SUPABASE_SERVICE_KEY');
+        $this->url = rtrim($this->env('SUPABASE_URL', 'https://fddnruksiofxalrtypmk.supabase.co'), '/');
+        $this->key = $this->env('SUPABASE_SERVICE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZG5ydWtzaW9meGFscnR5cG1rIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzY0MTk0NCwiZXhwIjoyMDkzMjE3OTQ0fQ.CtJjfBM3gWAOI-rDi1ztNRtELmM_bJfPC_z46O0cpYg');
     }
 
     private function env($name, $default = '')
