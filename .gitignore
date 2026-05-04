@@ -8,3 +8,9 @@ node_modules/
 Thumbs.db
 .agents/
 skills-lock.json
+
+# Local uploads (don't sync user files to git)
+uploads/*
+!uploads/.gitkeep
+!uploads/images/.gitkeep
+!uploads/modules/.gitkeep

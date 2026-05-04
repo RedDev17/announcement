@@ -1,16 +1,21 @@
 <?php
-// storage.php - Supabase Storage helper using REST API
+// storage.php - File storage with two drivers: 'supabase' (default) or 'local' (filesystem).
+// Switch via STORAGE_DRIVER env var in .env.
 
 class SupabaseStorage
 {
+    private $driver;
     private $url;
     private $key;
+    private $localRoot;
     private $lastError = '';
 
     public function __construct()
     {
+        $this->driver = strtolower($this->env('STORAGE_DRIVER', 'supabase'));
         $this->url = rtrim($this->env('SUPABASE_URL', 'https://fddnruksiofxalrtypmk.supabase.co'), '/');
         $this->key = $this->env('SUPABASE_SERVICE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZG5ydWtzaW9meGFscnR5cG1rIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzY0MTk0NCwiZXhwIjoyMDkzMjE3OTQ0fQ.CtJjfBM3gWAOI-rDi1ztNRtELmM_bJfPC_z46O0cpYg');
+        $this->localRoot = realpath(__DIR__ . '/..') . DIRECTORY_SEPARATOR . 'uploads';
     }
 
     private function env($name, $default = '')
@@ -24,13 +29,68 @@ class SupabaseStorage
     }
 
     /**
-     * Upload a file from local path to a Supabase bucket.
+     * Detect the project base URL (e.g. /annoucement on XAMPP, '' on Vercel).
+     */
+    private function projectBaseUrl()
+    {
+        $script = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+        // /annoucement/index.php -> /annoucement
+        // /annoucement/admin/dashboard.php -> /annoucement
+        // /index.php -> ''
+        $parts = explode('/', trim($script, '/'));
+        if (count($parts) <= 1) return '';
+        return '/' . $parts[0];
+    }
+
+    private function localBucketDir($bucket)
+    {
+        $safeBucket = preg_replace('/[^A-Za-z0-9_-]/', '_', $bucket);
+        return $this->localRoot . DIRECTORY_SEPARATOR . $safeBucket;
+    }
+
+    /**
+     * Upload a file from local path to a bucket.
      * Returns true on success.
      */
     public function upload($bucket, $filename, $localPath, $mimeType)
     {
         $this->lastError = '';
 
+        if ($this->driver === 'local') {
+            return $this->uploadLocal($bucket, $filename, $localPath);
+        }
+        return $this->uploadSupabase($bucket, $filename, $localPath, $mimeType);
+    }
+
+    private function uploadLocal($bucket, $filename, $localPath)
+    {
+        $dir = $this->localBucketDir($bucket);
+        if (!is_dir($dir) && !mkdir($dir, 0775, true)) {
+            $this->lastError = 'Could not create upload directory: ' . $dir;
+            error_log($this->lastError);
+            return false;
+        }
+        $safeName = basename($filename);
+        $target = $dir . DIRECTORY_SEPARATOR . $safeName;
+        // Prefer move_uploaded_file if it's a temp upload, fallback to copy
+        if (is_uploaded_file($localPath)) {
+            if (!move_uploaded_file($localPath, $target)) {
+                $this->lastError = 'move_uploaded_file failed for: ' . $target;
+                error_log($this->lastError);
+                return false;
+            }
+        } else {
+            if (!copy($localPath, $target)) {
+                $this->lastError = 'copy failed for: ' . $target;
+                error_log($this->lastError);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function uploadSupabase($bucket, $filename, $localPath, $mimeType)
+    {
         if (empty($this->url) || empty($this->key)) {
             $this->lastError = 'Supabase Storage not configured (URL or KEY missing)';
             error_log($this->lastError);
@@ -78,10 +138,16 @@ class SupabaseStorage
     }
 
     /**
-     * Delete a file from a Supabase bucket. Returns true on success or if it didn't exist.
+     * Delete a file from a bucket. Returns true on success or if it didn't exist.
      */
     public function delete($bucket, $filename)
     {
+        if ($this->driver === 'local') {
+            $path = $this->localBucketDir($bucket) . DIRECTORY_SEPARATOR . basename($filename);
+            if (!is_file($path)) return true;
+            return @unlink($path);
+        }
+
         if (empty($this->url) || empty($this->key)) return false;
 
         $endpoint = $this->url . '/storage/v1/object/' . $bucket . '/' . rawurlencode($filename);
@@ -105,6 +171,10 @@ class SupabaseStorage
      */
     public function publicUrl($bucket, $filename)
     {
+        if ($this->driver === 'local') {
+            $base = $this->projectBaseUrl();
+            return $base . '/uploads/' . $bucket . '/' . rawurlencode($filename);
+        }
         if (empty($this->url)) return '';
         return $this->url . '/storage/v1/object/public/' . $bucket . '/' . rawurlencode($filename);
     }
