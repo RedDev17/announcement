@@ -32,9 +32,29 @@ if ($name === '' || !preg_match('/^[A-Za-z0-9._\- ]+$/', $name)) {
 }
 
 $base = rtrim(env_val('STORAGE_PUBLIC_URL', ''), '/');
+
+// Localhost fallback: when STORAGE_PUBLIC_URL is not set we are on the laptop
+// itself, so serve the file directly from the filesystem.
 if ($base === '') {
-    http_response_code(500);
-    exit('STORAGE_PUBLIC_URL not configured');
+    $localPath = __DIR__ . DIRECTORY_SEPARATOR . 'uploads'
+        . DIRECTORY_SEPARATOR . $bucket
+        . DIRECTORY_SEPARATOR . $name;
+    if (!is_file($localPath)) {
+        http_response_code(404);
+        header('Content-Type: text/plain');
+        exit('File not found');
+    }
+    $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+    $map = [
+        'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png',
+        'gif' => 'image/gif',  'webp' => 'image/webp', 'svg' => 'image/svg+xml',
+        'pdf' => 'application/pdf',
+    ];
+    header('Content-Type: ' . ($map[$ext] ?? 'application/octet-stream'));
+    header('Cache-Control: public, max-age=86400, immutable');
+    header('Content-Length: ' . filesize($localPath));
+    readfile($localPath);
+    exit();
 }
 
 $upstream = $base . '/uploads/' . rawurlencode($bucket) . '/' . rawurlencode($name);
@@ -60,13 +80,15 @@ curl_close($ch);
 if ($body === false) {
     http_response_code(502);
     header('Content-Type: text/plain');
-    exit('upstream error: ' . $err);
+    header('Cache-Control: no-store');
+    exit('Upstream unreachable. Make sure the laptop and ngrok tunnel are running.');
 }
 
 if ($code < 200 || $code >= 400) {
-    http_response_code($code ?: 502);
+    http_response_code($code === 404 ? 404 : 502);
     header('Content-Type: text/plain');
-    exit('upstream HTTP ' . $code);
+    header('Cache-Control: no-store');
+    exit($code === 404 ? 'File not found' : 'Upstream HTTP ' . $code);
 }
 
 // Fallback content-type guess from extension if upstream didn't send one
@@ -81,6 +103,7 @@ if (!$ctype || stripos($ctype, 'text/html') !== false) {
 }
 
 header('Content-Type: ' . $ctype);
-header('Cache-Control: public, max-age=300');
+// Cache files aggressively at the browser; filenames are timestamped and unique
+header('Cache-Control: public, max-age=86400, immutable');
 header('Content-Length: ' . strlen($body));
 echo $body;

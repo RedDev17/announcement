@@ -138,6 +138,12 @@ body {
 	color: white;
 }
 
+.user-info {
+	font-size: 14px;
+	font-weight: 600;
+	color: #1e293b;
+}
+
 .user-info h4 {
 	font-size: 15px;
 	font-weight: 600;
@@ -146,6 +152,32 @@ body {
 .user-info p {
 	font-size: 13px;
 	color: #64748b;
+}
+
+/* ===== FLASH BANNERS (shared) ===== */
+.flash {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 12px 16px;
+	border-radius: 10px;
+	margin: 0 auto 18px;
+	max-width: 700px;
+	font-size: 14px;
+	font-weight: 500;
+	border: 1px solid transparent;
+}
+
+.flash-success {
+	background: #ecfdf5;
+	color: #047857;
+	border-color: #a7f3d0;
+}
+
+.flash-error {
+	background: #fef2f2;
+	color: #b91c1c;
+	border-color: #fecaca;
 }
 
 /* Upload Card */

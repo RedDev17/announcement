@@ -66,20 +66,29 @@ class Database
         }
         $sslPart = $sslMode === 'disable' ? '' : ';sslmode=' . $sslMode;
 
+        // Connect timeout (in seconds). Keeps Vercel from hanging for ~30s
+        // when the local laptop / ngrok tunnel is offline. Override via DB_TIMEOUT.
+        $timeout = (int)$this->env('DB_TIMEOUT', '6');
+        if ($timeout < 2) $timeout = 2;
+
         try {
             $dsn = "pgsql:host=" . $this->host .
                 ";port=" . $this->port .
                 ";dbname=" . $this->dbname .
+                ";connect_timeout=" . $timeout .
                 $sslPart;
 
-            $this->sql = new PDO($dsn, $this->username, $this->password);
-            $this->sql->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $this->sql->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+            $this->sql = new PDO($dsn, $this->username, $this->password, [
+                PDO::ATTR_TIMEOUT => $timeout,
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            ]);
 
         } catch (PDOException $e) {
             error_log('DB connection failed: ' . $e->getMessage());
-            http_response_code(500);
-            die('Database connection error. Please try again later.');
+            http_response_code(503);
+            // Friendly message; keep details out of public response
+            die('Database is temporarily unavailable. Please try again in a moment.');
         }
 
         return $this->sql;

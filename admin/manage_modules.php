@@ -82,15 +82,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
+            $params = ['uploaded' => $uploaded];
             if ($failed > 0) {
-                $msgText = "Uploaded $uploaded, failed $failed.";
-                if (!empty($errors)) $msgText .= ' Errors: ' . implode('; ', $errors);
-                $msgText = addslashes(htmlspecialchars($msgText));
-                echo "<script>alert('$msgText'); window.location.href='manage_modules.php';</script>";
-                exit();
+                $errMsg = "Failed $failed of " . ($uploaded + $failed);
+                if (!empty($errors)) $errMsg .= ': ' . implode('; ', array_slice($errors, 0, 3));
+                $params['err'] = $errMsg;
             }
-
-            header("Location: manage_modules.php?uploaded=" . $uploaded);
+            header('Location: manage_modules.php?' . http_build_query($params));
             exit();
         }
     }
@@ -123,6 +121,7 @@ $modules = getModule();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Modules</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233b82f6'%3E%3Cpath d='M3 11l18-5v12L3 14v-3zm14.5 4.5l1.5 4-2 1-2-4.5 2.5-.5z'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../css/dashboard.css">
 </head>
@@ -133,9 +132,13 @@ $modules = getModule();
             <?php include "header.php"; ?>
 
             <?php if (isset($_GET['uploaded']) && intval($_GET['uploaded']) > 0): ?>
-                <div style="margin-bottom:16px; padding:14px 18px; background:#10b98122; border:1px solid #10b981; border-radius:10px; color:#10b981; display:flex; align-items:center; gap:10px;">
-                    <i class="fas fa-check-circle"></i>
-                    <span><?php echo intval($_GET['uploaded']); ?> PDF<?php echo intval($_GET['uploaded']) > 1 ? 's' : ''; ?> uploaded successfully.</span>
+                <div class="flash flash-success"><i class="fas fa-check-circle"></i>
+                    <?php echo intval($_GET['uploaded']); ?> PDF<?php echo intval($_GET['uploaded']) > 1 ? 's' : ''; ?> uploaded successfully.
+                </div>
+            <?php endif; ?>
+            <?php if (!empty($_GET['err'])): ?>
+                <div class="flash flash-error"><i class="fas fa-exclamation-triangle"></i>
+                    <?php echo htmlspecialchars($_GET['err']); ?>
                 </div>
             <?php endif; ?>
 

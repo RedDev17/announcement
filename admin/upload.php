@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 if (isset($_POST['submit'])) {
     if (!isset($_FILES['image']) || $_FILES['image']['error'] == UPLOAD_ERR_NO_FILE) {
-        echo "<script>alert('Please select a file to upload'); window.location.href='dashboard.php';</script>";
+        header('Location: dashboard.php?err=' . urlencode('Please select a file to upload.'));
         exit();
     }
 
@@ -25,7 +25,7 @@ if (isset($_POST['submit'])) {
     $file_type = mime_content_type($tempname);
 
     if (!in_array($file_type, $allowed_types, true)) {
-        echo "<script>alert('Only JPG, PNG, GIF, WEBP files are allowed'); window.location.href='dashboard.php';</script>";
+        header('Location: dashboard.php?err=' . urlencode('Only JPG, PNG, GIF, WEBP files are allowed.'));
         exit();
     }
 
@@ -36,7 +36,6 @@ if (isset($_POST['submit'])) {
 
     $storage = getStorage();
 
-    // Upload to 'images' bucket (local /uploads or Supabase, per STORAGE_DRIVER)
     if ($storage->upload('images', $file_name, $tempname, $file_type)) {
         $pdo = getDB();
 
@@ -54,10 +53,11 @@ if (isset($_POST['submit'])) {
         $insert = $pdo->prepare("INSERT INTO image (file, uploaded_at) VALUES (?, NOW())");
         $insert->execute([$file_name]);
 
-        echo "<script>alert('Image uploaded successfully'); window.location.href='dashboard.php';</script>";
-    } else {
-        $err = htmlspecialchars($storage->getLastError());
-        echo "<script>alert('Upload failed: " . addslashes($err) . "'); window.location.href='dashboard.php';</script>";
+        header('Location: dashboard.php?ok=1');
+        exit();
     }
+
+    header('Location: dashboard.php?err=' . urlencode('Upload failed: ' . $storage->getLastError()));
+    exit();
 }
 ?>
