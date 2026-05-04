@@ -39,41 +39,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // ---- FILE ACTIONS ----
     if (isset($_POST['add_module'])) {
-        $title = trim($_POST['title']);
-        $description = trim($_POST['description']);
+        $description = trim($_POST['description'] ?? '');
         $folderId = intval($_POST['folder_id']);
 
-        if ($folderId > 0 && isset($_FILES['module_file']) && $_FILES['module_file']['error'] === UPLOAD_ERR_OK) {
-            $originalName = basename($_FILES['module_file']['name']);
-            $tempName = $_FILES['module_file']['tmp_name'];
-
-            // Auto-fill title from file name if empty
-            if ($title === '') {
-                $title = pathinfo($originalName, PATHINFO_FILENAME);
-            }
-
-            $allowedTypes = ['application/pdf'];
-            $fileType = mime_content_type($tempName);
-
-            if (!in_array($fileType, $allowedTypes, true)) {
-                echo "<script>alert('Only PDF files are allowed'); window.location.href='manage_modules.php';</script>";
-                exit();
-            }
-
-            // Generate unique safe filename
-            $safeName = preg_replace('/[^A-Za-z0-9_-]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
-            $uniqueName = time() . '_' . $safeName . '.pdf';
-
+        if ($folderId > 0 && isset($_FILES['module_file']) && is_array($_FILES['module_file']['name'])) {
             $storage = supabaseStorage();
-            if ($storage->upload('modules', $uniqueName, $tempName, 'application/pdf')) {
-                addModule($title, $uniqueName, $description, $folderId);
-                header("Location: manage_modules.php");
-                exit();
-            } else {
-                $err = addslashes(htmlspecialchars($storage->getLastError()));
-                echo "<script>alert('Upload failed: " . $err . "'); window.location.href='manage_modules.php';</script>";
+            $allowedTypes = ['application/pdf'];
+            $uploaded = 0;
+            $failed = 0;
+            $errors = [];
+
+            $files = $_FILES['module_file'];
+            $count = count($files['name']);
+
+            for ($i = 0; $i < $count; $i++) {
+                if ($files['error'][$i] !== UPLOAD_ERR_OK) {
+                    $failed++;
+                    continue;
+                }
+
+                $originalName = basename($files['name'][$i]);
+                $tempName = $files['tmp_name'][$i];
+                $fileType = mime_content_type($tempName);
+
+                if (!in_array($fileType, $allowedTypes, true)) {
+                    $failed++;
+                    $errors[] = $originalName . ' (not a PDF)';
+                    continue;
+                }
+
+                // Title = file name without extension
+                $title = pathinfo($originalName, PATHINFO_FILENAME);
+                // Safe unique filename for storage
+                $safeName = preg_replace('/[^A-Za-z0-9_-]/', '_', $title);
+                $uniqueName = time() . '_' . $i . '_' . $safeName . '.pdf';
+
+                if ($storage->upload('modules', $uniqueName, $tempName, 'application/pdf')) {
+                    addModule($title, $uniqueName, $description, $folderId);
+                    $uploaded++;
+                } else {
+                    $failed++;
+                    $errors[] = $originalName . ' (' . $storage->getLastError() . ')';
+                }
+            }
+
+            if ($failed > 0) {
+                $msgText = "Uploaded $uploaded, failed $failed.";
+                if (!empty($errors)) $msgText .= ' Errors: ' . implode('; ', $errors);
+                $msgText = addslashes(htmlspecialchars($msgText));
+                echo "<script>alert('$msgText'); window.location.href='manage_modules.php';</script>";
                 exit();
             }
+
+            header("Location: manage_modules.php");
+            exit();
         }
     }
 
@@ -201,28 +220,25 @@ $modules = getModule();
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="form-group" style="flex:1">
-                                <label>PDF Title <small style="color:#64748b;font-weight:400">(auto-fills from file name)</small></label>
-                                <input type="text" name="title" id="moduleTitleInput" placeholder="Auto-filled from file name">
-                            </div>
                         </div>
                         <div class="form-group">
-                            <label>Description</label>
+                            <label>Description <small style="color:#64748b;font-weight:400">(optional, applied to all files)</small></label>
                             <textarea name="description" placeholder="Enter description (optional)" rows="2"></textarea>
                         </div>
                         <div class="file-input-container">
                             <div class="file-input-wrapper">
-                                <input type="file" name="module_file" id="moduleFileInput" accept=".pdf" required>
+                                <input type="file" name="module_file[]" id="moduleFileInput" accept=".pdf,application/pdf" multiple required>
                                 <div class="browse-button">
                                     <i class="fas fa-folder-open"></i>
-                                    <span>Choose PDF File</span>
+                                    <span>Choose PDF Files</span>
                                 </div>
                             </div>
-                            <p class="file-types">PDF files only</p>
+                            <p class="file-types">Select one or more PDF files. Title is auto-set from the file name.</p>
+                            <div id="fileListPreview" style="margin-top:14px; text-align:left; display:none;"></div>
                         </div>
                         <div class="form-actions">
                             <button type="submit" name="add_module" class="submit-button">
-                                <i class="fas fa-upload"></i> <span>Upload PDF</span>
+                                <i class="fas fa-upload"></i> <span>Upload PDFs</span>
                             </button>
                         </div>
                     </form>
@@ -298,17 +314,28 @@ $modules = getModule();
         document.addEventListener('DOMContentLoaded', function() {
             const fileInput = document.getElementById('moduleFileInput');
             const browseButton = document.querySelector('.browse-button');
-            const titleInput = document.getElementById('moduleTitleInput');
+            const preview = document.getElementById('fileListPreview');
             if (fileInput && browseButton) {
                 fileInput.addEventListener('change', function() {
-                    if (fileInput.files.length > 0) {
-                        const fileName = fileInput.files[0].name;
-                        browseButton.innerHTML = '<i class="fas fa-check"></i><span>' + fileName + '</span>';
+                    const count = fileInput.files.length;
+                    if (count > 0) {
+                        browseButton.innerHTML = '<i class="fas fa-check"></i><span>' + count + ' file' + (count > 1 ? 's' : '') + ' selected</span>';
                         browseButton.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
-                        // Auto-fill title from file name (without .pdf extension) if empty
-                        if (titleInput && titleInput.value.trim() === '') {
-                            titleInput.value = fileName.replace(/\.pdf$/i, '');
+
+                        if (preview) {
+                            let html = '<strong style="font-size:13px;color:#334155;">Files to upload:</strong><ul style="margin-top:8px;padding-left:20px;font-size:13px;color:#475569;">';
+                            for (let i = 0; i < fileInput.files.length; i++) {
+                                const f = fileInput.files[i];
+                                const title = f.name.replace(/\.pdf$/i, '');
+                                html += '<li><i class="fas fa-file-pdf" style="color:#ef4444;margin-right:6px"></i>' + title + '</li>';
+                            }
+                            html += '</ul>';
+                            preview.innerHTML = html;
+                            preview.style.display = 'block';
                         }
+                    } else if (preview) {
+                        preview.style.display = 'none';
+                        preview.innerHTML = '';
                     }
                 });
             }
