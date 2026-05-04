@@ -8,10 +8,11 @@ function _authEnv($name)
 }
 
 // Read secret from env; fall back to a static key so the app keeps working
-// even if AUTH_SECRET is not set. For best security, set AUTH_SECRET on Vercel.
+// even if AUTH_SECRET is not set. For best security, set AUTH_SECRET in your .env.
 $_auth_secret = _authEnv('AUTH_SECRET');
 if (empty($_auth_secret)) {
-    $_auth_secret = 'annoucement-board-default-auth-secret-v1';
+    $_auth_secret = 'INSECURE-default-auth-secret-set-AUTH_SECRET-in-env';
+    error_log('SECURITY WARNING: AUTH_SECRET is not set. Using insecure default. Set AUTH_SECRET in .env.');
 }
 define('AUTH_SECRET', $_auth_secret);
 define('AUTH_COOKIE', 'admin_token');

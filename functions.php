@@ -41,7 +41,7 @@ function renameFolder($id, $name)
 function deleteFolder($id)
 {
     $files = getModulesByFolder($id);
-    $storage = supabaseStorage();
+    $storage = getStorage();
     foreach ($files as $file) {
         if (!empty($file['file_name'])) {
             $storage->delete('modules', $file['file_name']);
@@ -98,7 +98,7 @@ function deleteModule($id)
 {
     $module = getModuleById($id);
     if ($module && !empty($module['file_name'])) {
-        supabaseStorage()->delete('modules', $module['file_name']);
+        getStorage()->delete('modules', $module['file_name']);
     }
     $pdo = getPDO();
     $stmt = $pdo->prepare("DELETE FROM files WHERE id = ?");

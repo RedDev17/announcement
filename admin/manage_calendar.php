@@ -8,11 +8,11 @@ $username = $authUser['username'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_event'])) {
-        $title = trim($_POST['title']);
-        $description = trim($_POST['description']);
-        $eventDate = $_POST['event_date'];
-        $eventTime = $_POST['event_time'];
-        $color = $_POST['color'];
+        $title = trim($_POST['title'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $eventDate = $_POST['event_date'] ?? '';
+        $eventTime = $_POST['event_time'] ?? '';
+        $color = $_POST['color'] ?? '#3b82f6';
         if (!empty($title) && !empty($eventDate)) {
             addCalendarEvent($title, $description, $eventDate, $eventTime, $color);
         }
@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (isset($_POST['delete_event'])) {
-        $id = intval($_POST['event_id']);
+        $id = intval($_POST['event_id'] ?? 0);
         deleteCalendarEvent($id);
         header("Location: manage_calendar.php");
         exit();

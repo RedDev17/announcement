@@ -5,7 +5,7 @@ require_once __DIR__ . '/functions.php';
 
 $folders = getFolders();
 $toDoList = getToDoList();
-$storage = supabaseStorage();
+$storage = getStorage();
 
 $calMonth = isset($_GET['month']) ? intval($_GET['month']) : (int) date('m');
 $calYear = isset($_GET['year']) ? intval($_GET['year']) : (int) date('Y');

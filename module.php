@@ -3,13 +3,19 @@ require_once __DIR__ . '/db/db.php';
 require_once __DIR__ . '/db/storage.php';
 require_once __DIR__ . '/functions.php';
 
-$storage = supabaseStorage();
+$storage = getStorage();
 
 $view = 'not_found';
 $folder = null;
 $files = [];
 $module = null;
 $pageTitle = 'Module';
+
+// No GET params -> back to home
+if (!isset($_GET['folder']) && !isset($_GET['id'])) {
+    header('Location: index.php');
+    exit();
+}
 
 // View: folder contents
 if (isset($_GET['folder'])) {
@@ -22,7 +28,7 @@ if (isset($_GET['folder'])) {
     }
 }
 
-// View: single PDF
+// View: single PDF (overrides folder view if both supplied)
 if (isset($_GET['id'])) {
     $id = intval($_GET['id']);
     $module = getModuleById($id);

@@ -1,8 +1,8 @@
 <?php
-// storage.php - File storage with two drivers: 'supabase' (default) or 'local' (filesystem).
-// Switch via STORAGE_DRIVER env var in .env.
+// storage.php - File storage. Default driver is 'local' (filesystem).
+// Optional 'supabase' driver kept for users who want it; configure via STORAGE_DRIVER in .env.
 
-class SupabaseStorage
+class FileStorage
 {
     private $driver;
     private $url;
@@ -12,10 +12,13 @@ class SupabaseStorage
 
     public function __construct()
     {
-        $this->driver = strtolower($this->env('STORAGE_DRIVER', 'supabase'));
-        $this->url = rtrim($this->env('SUPABASE_URL', 'https://fddnruksiofxalrtypmk.supabase.co'), '/');
-        $this->key = $this->env('SUPABASE_SERVICE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZG5ydWtzaW9meGFscnR5cG1rIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzY0MTk0NCwiZXhwIjoyMDkzMjE3OTQ0fQ.CtJjfBM3gWAOI-rDi1ztNRtELmM_bJfPC_z46O0cpYg');
-        $this->localRoot = realpath(__DIR__ . '/..') . DIRECTORY_SEPARATOR . 'uploads';
+        $this->driver = strtolower($this->env('STORAGE_DRIVER', 'local'));
+        $this->url = rtrim($this->env('SUPABASE_URL', ''), '/');
+        $this->key = $this->env('SUPABASE_SERVICE_KEY', '');
+        // realpath returns false if dir doesn't exist; fall back to relative path resolution
+        $root = realpath(__DIR__ . '/..');
+        if ($root === false) $root = __DIR__ . '/..';
+        $this->localRoot = $root . DIRECTORY_SEPARATOR . 'uploads';
     }
 
     private function env($name, $default = '')
@@ -180,12 +183,20 @@ class SupabaseStorage
     }
 }
 
-function supabaseStorage()
+function getStorage()
 {
     static $instance = null;
     if ($instance === null) {
-        $instance = new SupabaseStorage();
+        $instance = new FileStorage();
     }
     return $instance;
+}
+
+// Backward-compatible alias for older code that called supabaseStorage()
+if (!function_exists('supabaseStorage')) {
+    function supabaseStorage()
+    {
+        return getStorage();
+    }
 }
 ?>

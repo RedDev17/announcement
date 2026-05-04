@@ -77,7 +77,7 @@ INSERT INTO "user" (username, email, password, access_level)
 VALUES (
     'admin',
     'admin@local.test',
-    '$2y$10$EiNRMVEZmLvRXsPHQxmbP.bKr/WjMkLO5oa8t7CPbxKGQ/RkR.ITS',
+    '$2y$10$BTwy0DbitVjLng9H5GISnewmHHnpDPeHL9sb9oa0WxE6BJRPHNrhW',
     'admin'
 )
 ON CONFLICT (username) DO NOTHING;

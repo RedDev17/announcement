@@ -1,5 +1,13 @@
 <?php
 require_once __DIR__ . '/db/db.php';
+require_once __DIR__ . '/db/auth.php';
+
+// Only existing admins may create new admin accounts
+$currentUser = getLoggedInUser();
+if (!$currentUser || $currentUser['access_level'] !== 'admin') {
+    header('Location: admin/admin.php');
+    exit();
+}
 
 $error = '';
 $success = '';
@@ -29,8 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['signup'])) {
             } else {
                 $password = password_hash($passwordRaw, PASSWORD_DEFAULT);
                 $stmt = $pdo->prepare('INSERT INTO "user" (username, email, password, access_level) VALUES (?, ?, ?, ?)');
-                $stmt->execute([$username, $email, $password, 'user']);
-                $success = 'Account created successfully. You can now log in.';
+                $stmt->execute([$username, $email, $password, 'admin']);
+                $success = 'Admin account created. They can now log in at /admin/admin.php.';
             }
         } catch (PDOException $e) {
             error_log('Signup failed: ' . $e->getMessage());
@@ -52,7 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['signup'])) {
 <body>
     <div class="login-card">
         <div class="login-header">
-            <h3>Create Account</h3>
+            <h3>Create Admin Account</h3>
+            <p style="color:#94a3b8; font-size:13px; margin-top:6px;">New admin will have full dashboard access.</p>
         </div>
         <form method="post" class="login-form" autocomplete="off">
             <?php if ($error): ?>
@@ -63,16 +72,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['signup'])) {
             <?php endif; ?>
             <div class="form-group">
                 <input type="text" name="username" placeholder="Username (3-30 chars)" required minlength="3" maxlength="30"
-                    value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>">
+                    value="<?php echo $success ? '' : htmlspecialchars($_POST['username'] ?? ''); ?>">
             </div>
             <div class="form-group">
                 <input type="email" name="email" placeholder="Email" required
-                    value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
+                    value="<?php echo $success ? '' : htmlspecialchars($_POST['email'] ?? ''); ?>">
             </div>
             <div class="form-group">
                 <input type="password" name="password" placeholder="Password (min 8 chars)" required minlength="8">
             </div>
-            <button type="submit" name="signup" class="btn-login">Sign Up</button>
+            <button type="submit" name="signup" class="btn-login">Create Admin</button>
+            <p style="text-align:center; margin-top:14px; font-size:13px;">
+                <a href="admin/dashboard.php" style="color:#60a5fa; text-decoration:none;">&larr; Back to dashboard</a>
+            </p>
         </form>
     </div>
 </body>

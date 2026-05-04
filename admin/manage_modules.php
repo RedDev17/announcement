@@ -11,7 +11,7 @@ $msg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // ---- FOLDER ACTIONS ----
     if (isset($_POST['add_folder'])) {
-        $name = trim($_POST['folder_name']);
+        $name = trim($_POST['folder_name'] ?? '');
         if (!empty($name)) {
             addFolder($name);
             $msg = 'Folder created.';
@@ -21,8 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (isset($_POST['rename_folder'])) {
-        $id = intval($_POST['folder_id']);
-        $name = trim($_POST['folder_name']);
+        $id = intval($_POST['folder_id'] ?? 0);
+        $name = trim($_POST['folder_name'] ?? '');
         if (!empty($name)) {
             renameFolder($id, $name);
         }
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (isset($_POST['delete_folder'])) {
-        $id = intval($_POST['folder_id']);
+        $id = intval($_POST['folder_id'] ?? 0);
         deleteFolder($id);
         header("Location: manage_modules.php");
         exit();
@@ -39,10 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // ---- FILE ACTIONS ----
     if (isset($_POST['add_module'])) {
-        $folderId = intval($_POST['folder_id']);
+        $folderId = intval($_POST['folder_id'] ?? 0);
 
         if ($folderId > 0 && isset($_FILES['module_file']) && is_array($_FILES['module_file']['name'])) {
-            $storage = supabaseStorage();
+            $storage = getStorage();
             $allowedTypes = ['application/pdf'];
             $uploaded = 0;
             $failed = 0;
@@ -90,15 +90,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit();
             }
 
-            header("Location: manage_modules.php");
+            header("Location: manage_modules.php?uploaded=" . $uploaded);
             exit();
         }
     }
 
     if (isset($_POST['update_module'])) {
-        $id = intval($_POST['module_id']);
-        $title = trim($_POST['title']);
-        $description = trim($_POST['description']);
+        $id = intval($_POST['module_id'] ?? 0);
+        $title = trim($_POST['title'] ?? '');
+        $description = trim($_POST['description'] ?? '');
         if (!empty($title)) {
             updateModule($id, $title, $description);
         }
@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (isset($_POST['delete_module'])) {
-        $id = intval($_POST['module_id']);
+        $id = intval($_POST['module_id'] ?? 0);
         deleteModule($id);
         header("Location: manage_modules.php");
         exit();
@@ -131,6 +131,13 @@ $modules = getModule();
         <?php include "sideNav.php"; ?>
         <div class="main-content">
             <?php include "header.php"; ?>
+
+            <?php if (isset($_GET['uploaded']) && intval($_GET['uploaded']) > 0): ?>
+                <div style="margin-bottom:16px; padding:14px 18px; background:#10b98122; border:1px solid #10b981; border-radius:10px; color:#10b981; display:flex; align-items:center; gap:10px;">
+                    <i class="fas fa-check-circle"></i>
+                    <span><?php echo intval($_GET['uploaded']); ?> PDF<?php echo intval($_GET['uploaded']) > 1 ? 's' : ''; ?> uploaded successfully.</span>
+                </div>
+            <?php endif; ?>
 
             <!-- ===== FOLDERS SECTION ===== -->
             <div class="upload-card">

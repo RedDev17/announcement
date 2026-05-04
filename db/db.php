@@ -1,5 +1,5 @@
 <?php
-// db.php - PostgreSQL connection (works with Supabase or local PG via .env)
+// db.php - PostgreSQL connection. Configure via .env file (project root) or env vars.
 
 // Load .env file if present (for local development)
 (function () {
@@ -16,7 +16,7 @@
         if ($line === '' || $line[0] === '#') continue;
         if (!str_contains($line, '=')) continue;
         [$k, $v] = array_map('trim', explode('=', $line, 2));
-        // Also strip any leftover BOM/non-printables from key
+        // Strip any BOM/non-printables that snuck onto the key
         $k = preg_replace('/^[^A-Za-z_]+/', '', $k);
         if ($k === '') continue;
         // Strip optional surrounding quotes
@@ -46,20 +46,22 @@ class Database
     {
         $this->sql = null;
 
-        // Defaults to Supabase if no env override is set
-        $this->host = $this->env('DB_HOST', 'aws-1-ap-southeast-2.pooler.supabase.com');
-        $this->port = $this->env('DB_PORT', '6543');
-        $this->dbname = $this->env('DB_NAME', 'postgres');
-        $this->username = $this->env('DB_USER', 'postgres.fddnruksiofxalrtypmk');
-        $this->password = $this->env('DB_PASS', '@#Ellyred@#12345');
+        // Defaults to LOCAL PostgreSQL (override via .env or Vercel env vars)
+        $this->host = $this->env('DB_HOST', 'localhost');
+        $this->port = $this->env('DB_PORT', '5432');
+        $this->dbname = $this->env('DB_NAME', 'announcement');
+        $this->username = $this->env('DB_USER', 'postgres');
+        $this->password = $this->env('DB_PASS', '');
 
-        // SSL mode: explicit override > auto-detect (local/ngrok = no SSL, others = require)
+        // SSL: localhost and ngrok tunnels skip SSL; others require it.
+        // Override with DB_SSLMODE=disable|require|prefer
         $sslMode = $this->env('DB_SSLMODE', '');
         if ($sslMode === '') {
             $hostLower = strtolower($this->host);
             $isPlain = in_array($hostLower, ['localhost', '127.0.0.1', '::1'], true)
                 || str_contains($hostLower, 'ngrok.io')
-                || str_contains($hostLower, 'ngrok-free.app');
+                || str_contains($hostLower, 'ngrok-free.app')
+                || str_contains($hostLower, 'ngrok.app');
             $sslMode = $isPlain ? 'disable' : 'require';
         }
         $sslPart = $sslMode === 'disable' ? '' : ';sslmode=' . $sslMode;

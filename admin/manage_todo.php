@@ -8,10 +8,10 @@ $username = $authUser['username'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_todo'])) {
-        $task = trim($_POST['task']);
-        $description = trim($_POST['description']);
-        $deadline = $_POST['deadline'];
-        $deadlineTime = $_POST['deadline_time'];
+        $task = trim($_POST['task'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $deadline = $_POST['deadline'] ?? '';
+        $deadlineTime = $_POST['deadline_time'] ?? '';
         if (!empty($task) && !empty($deadline)) {
             addTodo($task, $description, $deadline, $deadlineTime);
         }
@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (isset($_POST['delete_todo'])) {
-        $id = intval($_POST['todo_id']);
+        $id = intval($_POST['todo_id'] ?? 0);
         deleteTodo($id);
         header("Location: manage_todo.php");
         exit();

@@ -6,6 +6,12 @@ require_once __DIR__ . '/../db/auth.php';
 $authUser = requireAdmin();
 $username = $authUser['username'];
 
+// If accessed via GET (e.g., direct URL), redirect to dashboard
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: dashboard.php');
+    exit();
+}
+
 if (isset($_POST['submit'])) {
     if (!isset($_FILES['image']) || $_FILES['image']['error'] == UPLOAD_ERR_NO_FILE) {
         echo "<script>alert('Please select a file to upload'); window.location.href='dashboard.php';</script>";
@@ -28,13 +34,13 @@ if (isset($_POST['submit'])) {
     $safeName = preg_replace('/[^A-Za-z0-9_-]/', '_', pathinfo($original_name, PATHINFO_FILENAME));
     $file_name = time() . '_' . $safeName . '.' . $ext;
 
-    $storage = supabaseStorage();
+    $storage = getStorage();
 
-    // Upload to Supabase Storage 'images' bucket
+    // Upload to 'images' bucket (local /uploads or Supabase, per STORAGE_DRIVER)
     if ($storage->upload('images', $file_name, $tempname, $file_type)) {
         $pdo = getDB();
 
-        // Delete the old image from Supabase
+        // Delete the old image to free space
         $old = $pdo->query("SELECT file FROM image LIMIT 1");
         if ($old && $old->rowCount() > 0) {
             $old_row = $old->fetch();
