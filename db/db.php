@@ -5,11 +5,20 @@
 (function () {
     $envFile = __DIR__ . '/../.env';
     if (!is_file($envFile)) return;
-    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+    $contents = file_get_contents($envFile);
+    if ($contents === false) return;
+    // Strip UTF-8 BOM if present
+    if (substr($contents, 0, 3) === "\xEF\xBB\xBF") {
+        $contents = substr($contents, 3);
+    }
+    foreach (preg_split('/\r\n|\r|\n/', $contents) as $line) {
         $line = trim($line);
         if ($line === '' || $line[0] === '#') continue;
         if (!str_contains($line, '=')) continue;
         [$k, $v] = array_map('trim', explode('=', $line, 2));
+        // Also strip any leftover BOM/non-printables from key
+        $k = preg_replace('/^[^A-Za-z_]+/', '', $k);
+        if ($k === '') continue;
         // Strip optional surrounding quotes
         $v = preg_replace('/^([\'"])(.*)\1$/', '$2', $v);
         if (getenv($k) === false) {
@@ -44,9 +53,16 @@ class Database
         $this->username = $this->env('DB_USER', 'postgres.fddnruksiofxalrtypmk');
         $this->password = $this->env('DB_PASS', '@#Ellyred@#12345');
 
-        // Use SSL only for remote hosts; localhost doesn't need it
-        $isLocal = in_array(strtolower($this->host), ['localhost', '127.0.0.1', '::1'], true);
-        $sslPart = $isLocal ? '' : ';sslmode=require';
+        // SSL mode: explicit override > auto-detect (local/ngrok = no SSL, others = require)
+        $sslMode = $this->env('DB_SSLMODE', '');
+        if ($sslMode === '') {
+            $hostLower = strtolower($this->host);
+            $isPlain = in_array($hostLower, ['localhost', '127.0.0.1', '::1'], true)
+                || str_contains($hostLower, 'ngrok.io')
+                || str_contains($hostLower, 'ngrok-free.app');
+            $sslMode = $isPlain ? 'disable' : 'require';
+        }
+        $sslPart = $sslMode === 'disable' ? '' : ';sslmode=' . $sslMode;
 
         try {
             $dsn = "pgsql:host=" . $this->host .
