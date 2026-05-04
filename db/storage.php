@@ -171,10 +171,21 @@ class FileStorage
 
     /**
      * Get the public URL for a file in a public bucket.
+     *
+     * - On localhost (XAMPP): returns a direct /uploads/... URL.
+     * - On Vercel (STORAGE_PUBLIC_URL is set): returns a /files.php proxy URL
+     *   because ngrok's free tier shows a browser-warning interstitial on
+     *   direct <img>/<object> requests. files.php streams the file through
+     *   with the required skip-warning header.
      */
     public function publicUrl($bucket, $filename)
     {
         if ($this->driver === 'local') {
+            $override = rtrim($this->env('STORAGE_PUBLIC_URL', ''), '/');
+            if ($override !== '') {
+                return '/files.php?b=' . rawurlencode($bucket)
+                     . '&f=' . rawurlencode($filename);
+            }
             $base = $this->projectBaseUrl();
             return $base . '/uploads/' . $bucket . '/' . rawurlencode($filename);
         }
