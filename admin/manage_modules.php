@@ -39,7 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // ---- FILE ACTIONS ----
     if (isset($_POST['add_module'])) {
-        $description = trim($_POST['description'] ?? '');
         $folderId = intval($_POST['folder_id']);
 
         if ($folderId > 0 && isset($_FILES['module_file']) && is_array($_FILES['module_file']['name'])) {
@@ -75,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $uniqueName = time() . '_' . $i . '_' . $safeName . '.pdf';
 
                 if ($storage->upload('modules', $uniqueName, $tempName, 'application/pdf')) {
-                    addModule($title, $uniqueName, $description, $folderId);
+                    addModule($title, $uniqueName, '', $folderId);
                     $uploaded++;
                 } else {
                     $failed++;
@@ -210,22 +209,16 @@ $modules = getModule();
                     <p class="empty-msg">Create a folder first before uploading files.</p>
                 <?php else: ?>
                     <form method="POST" enctype="multipart/form-data" class="upload-form">
-                        <div class="form-row">
-                            <div class="form-group" style="flex:1">
-                                <label>Assign to Folder *</label>
-                                <select name="folder_id" required style="width:100%; padding:10px 12px; background:#0f172a; border:1px solid #475569; color:#e2e8f0; border-radius:8px; font-size:14px;">
-                                    <option value="">-- Select Folder --</option>
-                                    <?php foreach ($folders as $folder): ?>
-                                        <option value="<?php echo $folder['id']; ?>"><?php echo htmlspecialchars($folder['name']); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                        </div>
                         <div class="form-group">
-                            <label>Description <small style="color:#64748b;font-weight:400">(optional, applied to all files)</small></label>
-                            <textarea name="description" placeholder="Enter description (optional)" rows="2"></textarea>
+                            <label>Assign to Folder *</label>
+                            <select name="folder_id" required style="width:100%; padding:10px 12px; background:#0f172a; border:1px solid #475569; color:#e2e8f0; border-radius:8px; font-size:14px;">
+                                <option value="">-- Select Folder --</option>
+                                <?php foreach ($folders as $folder): ?>
+                                    <option value="<?php echo $folder['id']; ?>"><?php echo htmlspecialchars($folder['name']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
-                        <div class="file-input-container">
+                        <div class="file-input-container" id="dropZone">
                             <div class="file-input-wrapper">
                                 <input type="file" name="module_file[]" id="moduleFileInput" accept=".pdf,application/pdf" multiple required>
                                 <div class="browse-button">
@@ -233,7 +226,9 @@ $modules = getModule();
                                     <span>Choose PDF Files</span>
                                 </div>
                             </div>
-                            <p class="file-types">Select one or more PDF files. Title is auto-set from the file name.</p>
+                            <p class="file-types" style="margin-top:14px;">
+                                <strong>Tip:</strong> Hold <kbd style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;padding:2px 6px;font-size:12px;">Ctrl</kbd> (or <kbd style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;padding:2px 6px;font-size:12px;">Cmd</kbd> on Mac) and click to select multiple PDFs, or drag &amp; drop them here.
+                            </p>
                             <div id="fileListPreview" style="margin-top:14px; text-align:left; display:none;"></div>
                         </div>
                         <div class="form-actions">
@@ -315,27 +310,71 @@ $modules = getModule();
             const fileInput = document.getElementById('moduleFileInput');
             const browseButton = document.querySelector('.browse-button');
             const preview = document.getElementById('fileListPreview');
-            if (fileInput && browseButton) {
-                fileInput.addEventListener('change', function() {
-                    const count = fileInput.files.length;
-                    if (count > 0) {
-                        browseButton.innerHTML = '<i class="fas fa-check"></i><span>' + count + ' file' + (count > 1 ? 's' : '') + ' selected</span>';
-                        browseButton.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            const dropZone = document.getElementById('dropZone');
 
-                        if (preview) {
-                            let html = '<strong style="font-size:13px;color:#334155;">Files to upload:</strong><ul style="margin-top:8px;padding-left:20px;font-size:13px;color:#475569;">';
-                            for (let i = 0; i < fileInput.files.length; i++) {
-                                const f = fileInput.files[i];
-                                const title = f.name.replace(/\.pdf$/i, '');
-                                html += '<li><i class="fas fa-file-pdf" style="color:#ef4444;margin-right:6px"></i>' + title + '</li>';
-                            }
-                            html += '</ul>';
-                            preview.innerHTML = html;
-                            preview.style.display = 'block';
+            function renderFiles(fileList) {
+                const count = fileList.length;
+                if (count > 0 && browseButton) {
+                    browseButton.innerHTML = '<i class="fas fa-check"></i><span>' + count + ' file' + (count > 1 ? 's' : '') + ' selected</span>';
+                    browseButton.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                }
+                if (preview) {
+                    if (count > 0) {
+                        let html = '<strong style="font-size:13px;color:#334155;">Files to upload (' + count + '):</strong><ul style="margin-top:8px;padding-left:20px;font-size:13px;color:#475569;">';
+                        for (let i = 0; i < count; i++) {
+                            const title = fileList[i].name.replace(/\.pdf$/i, '');
+                            html += '<li style="margin:4px 0;"><i class="fas fa-file-pdf" style="color:#ef4444;margin-right:6px"></i>' + title + '</li>';
                         }
-                    } else if (preview) {
+                        html += '</ul>';
+                        preview.innerHTML = html;
+                        preview.style.display = 'block';
+                    } else {
                         preview.style.display = 'none';
                         preview.innerHTML = '';
+                    }
+                }
+            }
+
+            if (fileInput) {
+                fileInput.addEventListener('change', function() {
+                    renderFiles(fileInput.files);
+                });
+            }
+
+            // Drag and drop support
+            if (dropZone && fileInput) {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(function(evt) {
+                    dropZone.addEventListener(evt, function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                });
+                ['dragenter', 'dragover'].forEach(function(evt) {
+                    dropZone.addEventListener(evt, function() {
+                        dropZone.style.borderColor = '#3b82f6';
+                        dropZone.style.backgroundColor = '#eff6ff';
+                    });
+                });
+                ['dragleave', 'drop'].forEach(function(evt) {
+                    dropZone.addEventListener(evt, function() {
+                        dropZone.style.borderColor = '';
+                        dropZone.style.backgroundColor = '';
+                    });
+                });
+                dropZone.addEventListener('drop', function(e) {
+                    const dropped = e.dataTransfer.files;
+                    // Filter to PDFs only
+                    const dt = new DataTransfer();
+                    for (let i = 0; i < dropped.length; i++) {
+                        if (dropped[i].type === 'application/pdf' || dropped[i].name.toLowerCase().endsWith('.pdf')) {
+                            dt.items.add(dropped[i]);
+                        }
+                    }
+                    if (dt.files.length > 0) {
+                        fileInput.files = dt.files;
+                        renderFiles(fileInput.files);
+                    } else {
+                        alert('Only PDF files are allowed.');
                     }
                 });
             }
