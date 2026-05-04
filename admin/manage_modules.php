@@ -43,9 +43,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $description = trim($_POST['description']);
         $folderId = intval($_POST['folder_id']);
 
-        if (!empty($title) && $folderId > 0 && isset($_FILES['module_file']) && $_FILES['module_file']['error'] === UPLOAD_ERR_OK) {
+        if ($folderId > 0 && isset($_FILES['module_file']) && $_FILES['module_file']['error'] === UPLOAD_ERR_OK) {
             $originalName = basename($_FILES['module_file']['name']);
             $tempName = $_FILES['module_file']['tmp_name'];
+
+            // Auto-fill title from file name if empty
+            if ($title === '') {
+                $title = pathinfo($originalName, PATHINFO_FILENAME);
+            }
 
             $allowedTypes = ['application/pdf'];
             $fileType = mime_content_type($tempName);
@@ -197,8 +202,8 @@ $modules = getModule();
                                 </select>
                             </div>
                             <div class="form-group" style="flex:1">
-                                <label>PDF Title *</label>
-                                <input type="text" name="title" placeholder="Enter PDF title" required>
+                                <label>PDF Title <small style="color:#64748b;font-weight:400">(auto-fills from file name)</small></label>
+                                <input type="text" name="title" id="moduleTitleInput" placeholder="Auto-filled from file name">
                             </div>
                         </div>
                         <div class="form-group">
@@ -213,7 +218,7 @@ $modules = getModule();
                                     <span>Choose PDF File</span>
                                 </div>
                             </div>
-                            <p class="file-types">PDF files only (Max 10MB)</p>
+                            <p class="file-types">PDF files only</p>
                         </div>
                         <div class="form-actions">
                             <button type="submit" name="add_module" class="submit-button">
@@ -293,11 +298,17 @@ $modules = getModule();
         document.addEventListener('DOMContentLoaded', function() {
             const fileInput = document.getElementById('moduleFileInput');
             const browseButton = document.querySelector('.browse-button');
+            const titleInput = document.getElementById('moduleTitleInput');
             if (fileInput && browseButton) {
                 fileInput.addEventListener('change', function() {
                     if (fileInput.files.length > 0) {
-                        browseButton.innerHTML = '<i class="fas fa-check"></i><span>' + fileInput.files[0].name + '</span>';
+                        const fileName = fileInput.files[0].name;
+                        browseButton.innerHTML = '<i class="fas fa-check"></i><span>' + fileName + '</span>';
                         browseButton.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                        // Auto-fill title from file name (without .pdf extension) if empty
+                        if (titleInput && titleInput.value.trim() === '') {
+                            titleInput.value = fileName.replace(/\.pdf$/i, '');
+                        }
                     }
                 });
             }
