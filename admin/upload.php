@@ -14,14 +14,6 @@ if (isset($_POST['submit'])) {
 
     $original_name = basename($_FILES['image']['name']);
     $tempname = $_FILES['image']['tmp_name'];
-    $size = (int)($_FILES['image']['size'] ?? 0);
-
-    // Max 5MB
-    $maxBytes = 5 * 1024 * 1024;
-    if ($size <= 0 || $size > $maxBytes) {
-        echo "<script>alert('File size must be between 1 byte and 5MB.'); window.location.href='dashboard.php';</script>";
-        exit();
-    }
 
     $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     $file_type = mime_content_type($tempname);

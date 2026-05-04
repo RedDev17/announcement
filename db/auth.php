@@ -2,9 +2,22 @@
 // auth.php - Cookie-based authentication for serverless (Vercel)
 // Uses HMAC-signed tokens instead of PHP sessions
 
-$_auth_secret = getenv('AUTH_SECRET') ?: ($_ENV['AUTH_SECRET'] ?? ($_SERVER['AUTH_SECRET'] ?? ''));
+function _authEnv($name)
+{
+    return getenv($name) ?: ($_ENV[$name] ?? ($_SERVER[$name] ?? ''));
+}
+
+$_auth_secret = _authEnv('AUTH_SECRET');
+// Fallback: derive a stable secret from DB_PASS so users don't need a second env var.
+// Still secure because DB_PASS is not in source code.
 if (empty($_auth_secret)) {
-    error_log('AUTH_SECRET environment variable is not set');
+    $dbPass = _authEnv('DB_PASS');
+    if (!empty($dbPass)) {
+        $_auth_secret = hash('sha256', 'auth:' . $dbPass);
+    }
+}
+if (empty($_auth_secret)) {
+    error_log('No AUTH_SECRET or DB_PASS env var available to derive auth secret');
     http_response_code(500);
     die('Server configuration error.');
 }

@@ -36,7 +36,7 @@ $username = $authUser['username'];
                     <h2 class="card-title">Upload Your Image</h2>
                     <p class="card-description">
                         Select an image file from your device to upload to the dashboard.
-                        Supported formats: JPG, PNG, GIF, WEBP. Max size: 5MB.
+                        Supported formats: JPG, PNG, GIF, WEBP.
                     </p>
                 </div>
 
@@ -50,7 +50,7 @@ $username = $authUser['username'];
                                 <span>Browse Files</span>
                             </div>
                         </div>
-                        <p class="file-types">JPG, PNG, GIF, WEBP (Max 5MB)</p>
+                        <p class="file-types">JPG, PNG, GIF, WEBP</p>
                     </div>
 
                     <div class="form-actions">

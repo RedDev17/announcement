@@ -46,14 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!empty($title) && $folderId > 0 && isset($_FILES['module_file']) && $_FILES['module_file']['error'] === UPLOAD_ERR_OK) {
             $originalName = basename($_FILES['module_file']['name']);
             $tempName = $_FILES['module_file']['tmp_name'];
-            $size = (int)($_FILES['module_file']['size'] ?? 0);
-
-            // Max 10MB
-            $maxBytes = 10 * 1024 * 1024;
-            if ($size <= 0 || $size > $maxBytes) {
-                echo "<script>alert('PDF size must be between 1 byte and 10MB.'); window.location.href='manage_modules.php';</script>";
-                exit();
-            }
 
             $allowedTypes = ['application/pdf'];
             $fileType = mime_content_type($tempName);
